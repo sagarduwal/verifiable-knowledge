@@ -1,0 +1,9 @@
+{
+  "name": "litprotocol-demo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@lit-protocol/lit-node-client-nodejs": "^7.0.4"
+  }
+}
