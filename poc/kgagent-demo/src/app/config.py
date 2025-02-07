@@ -10,7 +10,12 @@ class Config:
     def get_config(self):
         try:
             return {
-                "OPENAI_API_KEY": os.environ["OPENAI_API_KEY"],
+                "LLM": {
+                    "PROVIDER": "openai",
+                    "MODEL_NAME": "gpt-4o-mini",
+                    "TEMPERATURE": 0.5,
+                    "API_KEY": os.environ["OPENAI_API_KEY"],
+                },
                 "VDB": os.environ["VDB_URL"],  # vector database
                 "GDB": {
                     "USERNAME": os.environ["GDB_USERNAME"],
@@ -23,4 +28,5 @@ class Config:
             return e
 
     def get_config_key(self, key: str):
+        print(self.get_config())
         return self.get_config()[key]
