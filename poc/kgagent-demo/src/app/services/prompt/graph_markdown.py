@@ -28,6 +28,6 @@ DONOT add any other text. DONOT generate preamble messages.
 """
 )
 
-prompt_template = ChatPromptTemplate.from_messages(
+markdown_prompt_template = ChatPromptTemplate.from_messages(
     [("system", markdown_prompt), ("human", "##Text \n\n {text}")]
 )

@@ -4,11 +4,11 @@ extract_entities_prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "Extract noun from the text, including organization name and person name",
+            "Identify and list all named entities in the text that are either people or organizations",
         ),
         (
             "human",
-            "Use the format to extract information from following inuput : (query)",
+            "Use the format to extract information from following inuput : {query}",
         ),
     ]
 )
