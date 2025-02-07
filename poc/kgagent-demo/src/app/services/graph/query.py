@@ -42,3 +42,18 @@ def get_relationships_from_query(query: str, documents):
         return results
     except Exception as e:
         raise e
+
+
+async def get_relationships_from_query_async(query: str, documents):
+    try:
+        entities = await llm_client.async_generate(
+            prompt_template=extract_entities_prompt,
+            query={"query": query},
+            output_schema=Entities,
+        )
+        results = neo4j_connector.retrieve_relationship(
+            entities=entities.names, documents=documents
+        )
+        return results
+    except Exception as e:
+        raise e

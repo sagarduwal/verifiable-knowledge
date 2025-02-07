@@ -27,3 +27,18 @@ class LLMClient:
             )
         output = runner.invoke(query)
         return output
+
+    async def async_generate(
+        self, prompt_template: ChatPromptTemplate, query: dict, output_schema=None
+    ) -> str:
+        runner = None
+        if output_schema:
+            runner = prompt_template | ChatOpenAI(
+                api_key=self.api_key, model=self.model, temperature=self.temperature
+            ).with_structured_output(schema=output_schema)
+        else:
+            runner = prompt_template | ChatOpenAI(
+                api_key=self.api_key, model=self.model, temperature=self.temperature
+            )
+        output = await runner.ainvoke(query)
+        return output
