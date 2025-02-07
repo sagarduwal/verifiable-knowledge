@@ -48,10 +48,11 @@ async def create_kg(data: GraphModel):
 async def get_full_kg():
     try:
         # get graph from db
+        result = get_graph_data()[0]
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"message": "Getting all Knowledge Graph", "data": ""},
+            content={"message": "Getting all Knowledge Graph", "data": result},
         )
     except Exception as e:
         return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e)
@@ -61,9 +62,34 @@ async def get_full_kg():
 async def get_kg_for_doc(doc_id: str):
     try:
         # check if document exists in graph
-        # get graph for doc id
+        doc_exists = check_doc_exists_in_graph(doc_id)
 
-        return JSONResponse(status_code=status.HTTP_200_OK, content={"data": ""})
+        if not doc_exists:
+            return HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Document already exist in graph",
+            )
+
+        # get graph for doc id
+        result = get_graph_data(doc_id)[0]
+        nodes = []
+        for item in result["nodes"]:
+            nodes.append(
+                {
+                    "id": item["node_id"],
+                    "label": item["import_name"],
+                    "fill": "#A1867F",
+                    "data": {
+                        "category": item.get("category", ""),
+                        "description": item["description"],
+                    },
+                }
+            )
+        for idx, item in enumerate(result["relationships"]):
+            item.update({"id": idx + 1})
+        result["nodes"] = nodes
+
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"data": result})
     except Exception as e:
         return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e)
 

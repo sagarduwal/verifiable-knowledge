@@ -126,6 +126,30 @@ async def process_graph_generate(data: dict):
         raise (e)
 
 
+def get_graph_data(doc_id: str = None):
+    try:
+        document_filter = ""
+        if doc_id:
+            document_filter = (
+                f'WHERE "{doc_id}" IN n.document_id AND "{doc_id}" IN e.document_id'
+            )
+
+        cypher_query = f"""
+            MATCH rel=(n)-[r]->(e)
+            {document_filter}
+            WITH collect(distinct n) AS nodeListN, 
+                collect(distinct e) AS nodeListE, 
+                collect(distinct {{source: n.node_id, target: e.node_id, label: type(r)}}) AS relationships
+            WITH apoc.coll.union(nodeListN, nodeListE) AS nodes, relationships
+            RETURN nodes, relationships;
+            """
+        result = neo4j_connector.execute_query(cypher_query)
+        return result
+    except Exception as e:
+        print(e)
+        raise e
+
+
 def get_raw_graph_data(doc_id: str):
     try:
         query = f"""
