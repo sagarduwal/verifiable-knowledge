@@ -1,4 +1,5 @@
 from typing import Text
+from enum import Enum
 from pydantic import BaseModel
 
 
@@ -15,3 +16,14 @@ class Relationship(BaseModel):
     source: Text
     destination: Text
     label: Text
+
+
+class ActionEnum(Enum):
+    ADD = "add"
+    UPDATE = "update"
+    DELETE = "delete"
+
+
+class NodeAction(BaseModel):
+    action: Text = ActionEnum.ADD.value
+    node: Node

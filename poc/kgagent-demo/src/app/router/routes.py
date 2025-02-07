@@ -15,6 +15,8 @@ async def create_kg(data: GraphModel):
     try:
         data = data.model_dump()
         document_id = data["document_id"]
+        url = data["url"]
+
         # check document id exists in graph
         doc_exists = check_doc_exists_in_graph(document_id)
         print(f"Doc exists: {doc_exists}")
