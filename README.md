@@ -20,6 +20,7 @@ Sample files:
 https://data-lake-demo-23.s3.us-east-2.amazonaws.com/altlayer.txt
 https://data-lake-demo-23.s3.us-east-2.amazonaws.com/ethglobal.txt
 https://data-lake-demo-23.s3.us-east-2.amazonaws.com/example.txt
+https://data-lake-demo-23.s3.us-east-2.amazonaws.com/lit-protocol.txt
 
 Cypher export:
 

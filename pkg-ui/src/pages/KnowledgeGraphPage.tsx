@@ -5,9 +5,10 @@ import ForceGraph2D from "react-force-graph-2d";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Brain, LogOut, Plus, Loader2, TicketX } from "lucide-react";
-import { litClient } from "@/lib/lit";
 import { toast } from "sonner";
+import { useWallet } from "@/context/WalletContext";
 
+import { encryptData } from "@/lib/lit";
 // import { nodes as g1_nodes, relationships as g1_links } from "@/data/graphData";
 // import {
 //   nodes as g2_nodes,
@@ -40,7 +41,9 @@ const getRandomColor = () => {
 };
 
 // Function to create a color map for categories
-const createCategoryColorMap = (nodes): Record<string, string> => {
+const createCategoryColorMap = (
+  nodes: Array<{ data?: { category?: string } }>
+): Record<string, string> => {
   const categoryColorMap: Record<string, string> = {};
   nodes.forEach((node) => {
     const category = node.data?.category;
@@ -52,7 +55,7 @@ const createCategoryColorMap = (nodes): Record<string, string> => {
 };
 
 export default function KnowledgeGraphPage() {
-  const { logout } = usePrivy();
+  const { logout, authenticated, login, user } = usePrivy();
   const navigate = useNavigate();
   const graphRef = useRef<any>(null);
 
@@ -65,6 +68,8 @@ export default function KnowledgeGraphPage() {
 
   const [documentId, setDocumentId] = useState("");
   const [documentLink, setDocumentLink] = useState("");
+
+  const walletData = useWallet();
 
   const handleLogout = async () => {
     await logout();
@@ -88,6 +93,7 @@ export default function KnowledgeGraphPage() {
   }, [gData]);
 
   useEffect(() => {
+    console.log(walletData);
     const fetchGraphData = async (graphId: string) => {
       try {
         const response = await fetch(
@@ -147,6 +153,46 @@ export default function KnowledgeGraphPage() {
       toast.error("Failed to generate knowledge graph");
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const encryptAndUpload = async (graphId: string) => {
+    try {
+      // Assuming you have a function to get the graph data as a JSON string
+      const graphData = JSON.stringify(gData);
+
+      // Encrypt the graph data using Lit Protocol
+      if (user?.wallet?.address) {
+        // Encrypt the graph data using Lit Protocol
+        const response = await fetch("http://localhost:8080/v1/lit/encrypt", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            connectedWallet: user.wallet.address,
+            stringToEncrypt: graphData,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to encrypt graph data");
+        }
+
+        const encryptedData = await response.json();
+        console.log("Encrypted Data:", encryptedData);
+
+        toast.success(
+          "Graph encrypted and uploaded successfully at ",
+          encryptedData?.data?.uploaded?.url
+        );
+      } else {
+        console.error("User wallet address is undefined");
+        toast.error("User wallet is not connected");
+      }
+    } catch (error) {
+      console.error("Error encrypting and uploading graph:", error);
+      toast.error("Failed to encrypt and upload graph");
     }
   };
 
@@ -226,6 +272,9 @@ export default function KnowledgeGraphPage() {
                     onClick={(e) => {
                       e.stopPropagation(); // Prevents the parent button's onClick from firing
                       // Add your encryption logic here
+
+                      encryptAndUpload(graph.id);
+
                       console.log(
                         "Encrypting JSON string for graph:",
                         graph.id
@@ -255,14 +304,29 @@ export default function KnowledgeGraphPage() {
         </ScrollArea>
 
         <div className="p-4 border-t">
-          <Button
-            variant="destructive"
-            className="w-full justify-start"
-            onClick={handleLogout}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Disconnect
-          </Button>
+          <div className="mb-4">
+            <h4 className="text-sm font-medium">Connected Wallet:</h4>
+            <p className="text-sm text-muted-foreground">
+              {user?.wallet?.address || "No wallet connected"}
+            </p>
+          </div>
+          {authenticated ? (
+            <Button
+              variant="destructive"
+              className="w-full justify-start"
+              onClick={handleLogout}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Disconnect
+            </Button>
+          ) : (
+            <Button
+              onClick={login}
+              className="w-full bg-black hover:bg-gray-800 text-white"
+            >
+              Login
+            </Button>
+          )}
         </div>
       </div>
 
