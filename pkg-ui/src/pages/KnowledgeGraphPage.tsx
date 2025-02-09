@@ -1,56 +1,33 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useNavigate } from "react-router-dom";
 import ForceGraph2D from "react-force-graph-2d";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Brain, LogOut } from "lucide-react";
-import { nodes, relationships } from "@/data";
+
+// import { nodes as g1_nodes, relationships as g1_links } from "@/data/graphData";
+// import {
+//   nodes as g2_nodes,
+//   relationships as g2_links,
+// } from "@/data/graphData1";
 
 // Sample knowledge graphs data
 const knowledgeGraphs = [
   {
-    id: 1,
-    name: "Blockchain Concepts",
-    description: "Core blockchain technology concepts and relationships",
+    id: "abc", //"eth-global-1",
+    name: "ETHGlobal",
+    description:
+      "Supporting Ethereum hackathons worldwide to grow and empower the developer community.",
   },
   {
-    id: 2,
-    name: "DeFi Ecosystem",
-    description: "Decentralized finance protocols and connections",
-  },
-  {
-    id: 3,
-    name: "NFT Landscape",
-    description: "NFT marketplaces, standards, and use cases",
-  },
-  {
-    id: 4,
-    name: "Web3 Infrastructure",
-    description: "Web3 development tools and frameworks",
+    id: "abc2", //"altlayer-protocol-2",
+    name: "AltLayer Protocol",
+    description:
+      "Decentralized rollup protocol enhancing security, finality, and interoperability with Restaked rollups and no-code RaaS.",
   },
 ];
 
-// Sample graph data for the selected graph
-let graphData = {
-  nodes: nodes,
-  links: relationships,
-};
-// const graphData = {
-//   nodes: [
-//     { id: "concept1", name: "Blockchain", group: 1 },
-//     { id: "concept2", name: "Smart Contracts", group: 1 },
-//     { id: "concept3", name: "DeFi", group: 2 },
-//     { id: "concept4", name: "NFTs", group: 2 },
-//     { id: "concept5", name: "Web3", group: 3 },
-//   ],
-//   links: [
-//     { source: "concept1", target: "concept2" },
-//     { source: "concept1", target: "concept3" },
-//     { source: "concept2", target: "concept4" },
-//     { source: "concept3", target: "concept5" },
-//   ],
-// };
 const getRandomColor = () => {
   const letters = "0123456789ABCDEF";
   let color = "#";
@@ -75,10 +52,13 @@ const createCategoryColorMap = (nodes): Record<string, string> => {
 export default function KnowledgeGraphPage() {
   const { logout } = usePrivy();
   const navigate = useNavigate();
+  const graphRef = useRef<any>(null);
+
   const [graphWidth, setGraphWidth] = useState(window.innerWidth - 300);
   const [graphHeight, setGraphHeight] = useState(window.innerHeight);
-  const [selectedGraphId, setSelectedGraphId] = useState<number | null>(1);
-  const categoryColorMap = createCategoryColorMap(graphData.nodes);
+  const [selectedGraphId, setSelectedGraphId] = useState<string | null>("abc");
+  const [gData, setGData] = useState({ nodes: [], links: [] });
+  const categoryColorMap = createCategoryColorMap(gData.nodes);
 
   const handleLogout = async () => {
     await logout();
@@ -94,6 +74,43 @@ export default function KnowledgeGraphPage() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [handleResize]);
+
+  useEffect(() => {
+    if (graphRef.current) {
+      graphRef.current.zoom(2); // Adjust the zoom level as needed
+    }
+  }, [gData]);
+
+  useEffect(() => {
+    const fetchGraphData = async (graphId: string) => {
+      try {
+        const response = await fetch(
+          `http://0.0.0.0:8005/api/v1/graph/${graphId}`,
+          {
+            headers: {
+              accept: "application/json",
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const result = await response.json();
+        console.log(result);
+        setGData({
+          nodes: result.data?.nodes || [],
+          links: result.data?.relationships || [],
+        });
+      } catch (error) {
+        console.error("Error fetching graph data:", error);
+        setGData({ nodes: [], links: [] }); // Fallback to empty graph on error
+      }
+    };
+
+    if (selectedGraphId) {
+      fetchGraphData(selectedGraphId);
+    }
+  }, [selectedGraphId]);
 
   return (
     <div className="flex h-screen">
@@ -111,7 +128,10 @@ export default function KnowledgeGraphPage() {
             {knowledgeGraphs.map((graph) => (
               <button
                 key={graph.id}
-                onClick={() => setSelectedGraphId(graph.id)}
+                onClick={() => {
+                  setSelectedGraphId(graph.id);
+                  console.log("graph Id: ", graph.id);
+                }}
                 className={`w-full text-left p-3 rounded-lg transition-colors ${
                   selectedGraphId === graph.id
                     ? "bg-primary text-primary-foreground"
@@ -142,12 +162,13 @@ export default function KnowledgeGraphPage() {
       {/* Graph Area */}
       <div className="flex-1">
         <ForceGraph2D
-          graphData={graphData}
+          ref={graphRef}
+          graphData={gData}
           width={graphWidth}
           height={graphHeight}
           nodeLabel="label"
           nodeAutoColorBy={(node) => {
-            const category = node.data?.category;
+            const category = node?.data?.category;
             return categoryColorMap[category] || "#999999";
           }}
           linkColor={() => "#999"}
