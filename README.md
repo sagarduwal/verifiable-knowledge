@@ -15,6 +15,9 @@ Verifiable Knowledge Onchain is a **marketplace for verifiable, purchasable know
 - **Onchain & Offchain Interactions**: Data can be used for onchain transactions, smart contracts, or offline analysis.
 - **Web3 & DeFi Compatibility**: Supports **Retrieval-Augmented Generation (RAG), Deepseek, and DeFi** for seamless transactions and monetization of knowledge assets.
 
+
+**Video Intro:** https://youtu.be/niJYS6Qs7Lo
+
 ---
 
 ## 🏪 Knowledge Graph Marketplace
